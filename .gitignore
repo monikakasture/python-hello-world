@@ -1,1 +1,5 @@
 /root/Project/Project/Infrastructure-Provisioning/.terraform
+Infrastructure-Provisioning/.terraform.lock.hcl
+Infrastructure-Provisioning/.terraform/
+Infrastructure-Provisioning/terraform.tfstate
+Infrastructure-Provisioning/terraform.tfstate.backup

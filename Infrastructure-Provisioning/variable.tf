@@ -7,7 +7,7 @@ variable "profile" {
 }
 
 variable "ec2_ami" {
-  default = "ami-008e1e7f1fcbe9b80 "
+  default = "ami-008e1e7f1fcbe9b80"
 }
 
 variable "instance_type" {
