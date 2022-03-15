@@ -48,10 +48,10 @@ AMI: ami-008e1e7f1fcbe9b80 
 # created Production load Instances 
 Pushed Terraform code to GitHub and applied to create  2 instances and a security group
 
-Load VPC
-VPC id: vpc-0fdf778d69038751e
-Availability Zone =ca-central-1a
-Subnet id: subnet-03ddbe0583ca7bd8e
+Load VPC /n
+VPC id: vpc-0fdf778d69038751e /n
+Availability Zone =ca-central-1a /n
+Subnet id: subnet-03ddbe0583ca7bd8e /n
 AMI: ami-041d49677629acc40
 
 
