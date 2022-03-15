@@ -36,3 +36,22 @@ ________________________________________________________________
 - [ ] Terraform plan
 - [ ] Terraform apply
 It will create a security group and ec-2 instance
+
+Management master VM
+Management  VPC
+VPC: vpc-0a456cfb0dd41261b
+Subnet: subnet-01005b844b3dc722b    
+Availability Zone = us-east-2a
+AMI: ami-008e1e7f1fcbe9b80 
+
+
+# created Production load Instances 
+Pushed Terraform code to GitHub and applied to create  2 instances and a security group
+
+Load VPC
+VPC id: vpc-0fdf778d69038751e
+Availability Zone =ca-central-1a
+Subnet id: subnet-03ddbe0583ca7bd8e
+AMI: ami-041d49677629acc40
+
+
