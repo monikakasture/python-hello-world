@@ -1,0 +1,23 @@
+---
+- name:
+  hosts: masters
+  vars:
+    ansible_ssh_private_key_file: ~/ec-2_key/Management.pem
+  remote_user: ec2-user
+  tasks:
+  - name: Set authorized key taken from file
+    authorized_key:
+      user: ec2-user
+      state: present
+      key: "{{ lookup('file', '/home/nishant/.ssh/id_rsa.pub') }}"
+- name:
+  hosts: workers
+  vars:
+    ansible_ssh_private_key_file: ~/ec-2_key/Load.pem
+  remote_user: ec2-user
+  tasks:
+  - name: Set authorized key taken from file
+    authorized_key:
+      user: ec2-user
+      state: present
+      key: "{{ lookup('file', '/home/nishant/.ssh/id_rsa.pub') }}"
