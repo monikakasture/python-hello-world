@@ -1,0 +1,147 @@
+---
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+  - name: Install dependencies for Docker
+    yum:
+      name: yum-utils
+      state: present
+
+
+  - name: Ensure a list of yum packages are installed
+    yum:
+        name: "{{ packages }}"
+        state: latest
+        update_cache: yes
+    vars:
+        packages:
+        - python-pip
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+        - amazon-linux-extras
+
+  - name: Add extras repository
+    shell: yum-config-manager --enable extras
+
+  - name: Enable Some packages from amazon-linux-extras packages
+    shell: "amazon-linux-extras enable python3.8 ansible2 docker"
+
+  - name: clean yum metadata cache
+    command: yum clean metadata
+    args:
+        warn: false
+
+  - name: Ensure a list of yum packages are installed
+    yum:
+        name: "{{ packages }}"
+        state: latest
+        update_cache: yes
+    vars:
+        packages:
+        - python3.8
+        - ansible
+        - docker
+        - containerd
+
+  - name: Enable Docker CE service at startup
+    service:
+        name: docker
+        state: started
+        enabled: yes
+
+  - name: Upgrade pip3
+    shell: "python3.8 -m pip install pip --upgrade"
+
+  - name: Ensure Python pip packages are installed
+    pip:
+        name: "{{ packages }}"
+        executable: /usr/local/bin/pip3.8
+    vars:
+        packages:
+        - boto
+        - boto3
+        - docker-compose 
+
+  - name: Remove swapfile from /etc/fstab
+    mount:
+      name: "{{ item }}"
+      fstype: swap
+      state: absent
+    with_items:
+      - swap
+      - none
+
+  - name: Disable swap
+    command: sudo swapoff -a
+    command: sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+    
+
+  - name: Disable IPtables
+    command: iptables -F
+  
+  - name: Add kubeadm repositories on Master Node
+    yum_repository:
+      name: kube
+      description: Kubernetes repo
+      baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-$basearch
+      enabled: 1
+      gpgcheck: 1
+      gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg  
+  
+
+  - name: Install Kubernetes
+    yum: 
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+        - kubelet 
+        - kubeadm 
+        - kubectl
+
+  - name: Restart kubelet
+    service:
+      name: kubelet
+      daemon_reload: yes
+      state: restarted
+  
+  - name: enable kubelet
+    command: systemctl enable kubelet.service 
+
+  - name: Initialize the Kubernetes cluster using kubeadm command
+    when: inventory_hostname in groups['masters']
+    command: kubeadm init --apiserver-advertise-address="172.31.6.115" --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=NumCPU --ignore-preflight-errors=Mem
+
+  - name: Set up Kubernetes for ec2-user
+    command: "{{ item }}"
+    when: inventory_hostname in groups['masters']
+    with_items:
+    - mkdir -p /home/ec2-user/.kube
+    - cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config
+    - chown ec2-user:ec2-user /home/ec2-user/.kube/config
+
+  - name: Install Flannel pod network
+    become: false
+    when: inventory_hostname in groups['masters']
+    command: kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
+
+  - name: Retrieve Kubernetes join command that is used to join worker node(s)
+    become: false
+    when: inventory_hostname in groups['masters']
+    command: kubeadm token create --print-join-command
+    register: join_command
+
+  - name: Attach kubeadm join command to a file on Ansible control node
+    when: inventory_hostname in groups['masters']
+    local_action: "copy content='{{ join_command.stdout_lines[0] }}' dest=join-command"
+
+  - name: Copy the join-command file created above to worker node
+    when: inventory_hostname in groups['workers']
+    copy: src=join-command dest=/tmp/kubeadm-join.sh mode=0777
+
+  - name: Join the worker node to cluster
+    when: inventory_hostname in groups['workers']
+    command: sh /tmp/kubeadm-join.sh

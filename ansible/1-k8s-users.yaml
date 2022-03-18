@@ -1,0 +1,11 @@
+- hosts: all
+  become: yes
+
+  tasks:
+
+    - name: allow 'kube' to use sudo without needing a password
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'ec2-user ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
