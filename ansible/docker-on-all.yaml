@@ -1,0 +1,87 @@
+---
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+  - name: Install dependencies for Docker
+    yum:
+      name: yum-utils
+      state: present
+
+
+  - name: Ensure a list of yum packages are installed
+    yum:
+        name: "{{ packages }}"
+        state: latest
+        update_cache: yes
+    vars:
+        packages:
+        - python-pip
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+        - amazon-linux-extras
+
+  - name: Add extras repository
+    shell: yum-config-manager --enable extras
+
+  - name: Enable Some packages from amazon-linux-extras packages
+    shell: "amazon-linux-extras enable python3.8 ansible2 docker"
+
+  - name: clean yum metadata cache
+    command: yum clean metadata
+    args:
+        warn: false
+
+  - name: Ensure a list of yum packages are installed
+    yum:
+        name: "{{ packages }}"
+        state: latest
+        update_cache: yes
+    vars:
+        packages:
+        - python3.8
+        - ansible
+        - docker
+        - containerd
+
+  - name: Enable Docker CE service at startup
+    service:
+        name: docker
+        state: started
+        enabled: yes
+
+  - name: Upgrade pip3
+    shell: "python3.8 -m pip install pip --upgrade"
+
+  - name: Ensure Python pip packages are installed
+    pip:
+        name: "{{ packages }}"
+        executable: /usr/local/bin/pip3.8
+    vars:
+        packages:
+        - boto
+        - boto3
+        - docker-compose
+
+  - name: Docker.sock permission 'support_tools' permissions
+    file: path={{ item }} owner=ec2-user group=ec2-user mode=0775 
+    with_items:
+    - /var/run/docker.sock
+
+- hosts: 'masters'
+  become: true
+  gather_facts: false
+  tasks:
+   
+    - name: Create a directory for jenkins volume
+      ansible.builtin.file:
+        path: /var/jenkins_home
+        state: directory
+        mode: '0755'       
+
+    - name: Run Jnenkins as Dokcer container 
+      command: docker run -d -p 8080:8080 -p 50000:50000 jenkins/jenkins:lts-jdk11
+      command: docker run -d -p 8080:8080 -p 50000:50000 -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts-jdk11
+
+      
