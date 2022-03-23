@@ -1,5 +1,5 @@
 pipeline {
-    agent prod1
+    agent { node {label 'prod1'} }
     environment {
         registry = "177650971626.dkr.ecr.ca-central-1.amazonaws.com/myrepo"
     }
