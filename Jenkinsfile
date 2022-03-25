@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Cloning Git') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/nishant']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/kasturenishant/Project.git']]])     
+                git branch: 'nishant', url: 'https://github.com/kasturenishant/Project.git'    
             }
         }
   
