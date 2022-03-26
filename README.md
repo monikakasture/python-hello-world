@@ -151,3 +151,71 @@ To get the public key of AWS ec2-instance
 
 - ansible-playbook setup.yaml 
 Run this command to run the playbook and it will store public key of our instance to remote machine. Authorized key file.
+
+Jenkins pipeline
+https://www.cidevops.com/2020/07/automate-docker-builds-using-jenkins.html
+
+
+Log in to Jenkins 
+Manage Jenkins
+Configure credentials
+Add
+UserName: Docker user name
+Password : Docker Password
+
+ID: docker-hub
+
+On master node 
+
+- docker login --username=kasturenishant
+It will prompt for password , provide docker hub password
+
+# In all machines including master and load nodes
+- useradd jenkins
+- sudo usermod -aG docker jenkins 
+to add jenkins user to docker group so it can have access to docker.sock
+
+installed docker and docker pipeline plugin in jenkins UI
+
+AWS
+login and create ECR to be put docker images 
+create private registry just select private give name and save
+
+create IAM role 
+https://www.cidevops.com/2020/05/how-to-setup-elastic-container-registry.html
+with container registry full access permission
+name it ECRfullaccess
+
+and attach role to master machine and all host machines
+
+from AWSec2 machine> settings>manage roles> attach role
+
+
+#jenkins pipeline
+
+create webhook on github
+create job in jenkins 
+
+name: Dokcerjenkinsjob
+pipeline
+(okay)
+
+go to pipeline and 
+add github repo url
+
+
+save the job
+
+- Vim Jenkinsfile
+change the ECR repo link as per your account 
+change the github link
+
+- vim Dockerfile
+- vim app.py
+- vim requirements.txt
+pushed it to github 
+https://github.com/akannan1087/myPythonDockerRepo (get code from here)
+
+## Manage Jenkins
+global tool settings 
+>> Jgit select and save for git option
